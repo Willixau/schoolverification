@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification d'identité</title>
+    <link rel="icon" type="image/png" href="https://static.wixstatic.com/media/08b457_c9c0e64885224755aff07927575f90a7~mv2.png">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; }
+        input[type="email"], input[type="text"] { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button { background-color: #0078d4; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; transition: background 0.2s; width: 95%; }
+        button:hover { background-color: #005a9e; }
+        .error { color: #d83b01; margin-top: 15px; font-weight: bold; }
+        .success { color: #107c41; margin-top: 15px; font-weight: bold; }
+        .hidden { display: none; }
+        body { background-image: url("https://www.baltana.com/files/wallpapers-10/Light-Silver-Abstract-Wallpaper-28470.jpg"); background-size: cover; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Vérification Scolaire</h2>
+    <p id="instruction-text">Entrez votre nom et votre courriel de votre établissement scolaire du Québec pour recevoir le lien de la vidéo par courriel.</p>
+    
+    <div id="form-container">
+        <input type="text" id="user-name" placeholder="Votre nom complet" required>
+        <input type="email" id="user-email" placeholder="Adresse scolaire" required>
+        <button onclick="verifierEtEnvoyer()">Obtenir le lien</button>
+        <p style="font-size: 12px; color: #666; margin-top: 10px;">(Exemples d'adresses éligibles : @uqam.ca, @umontreal.ca, @ulaval.ca, @usherbrooke.ca, @mcgill.ca, @concordia.ca, @edu.csspi.ca, @etsmtl.ca, @csdmedu.ca et @csdm.qc.ca OU tout email terminant par '.qc.ca')</p>
+        <p style="font-size: 15px; color: #666;">©2026 Willixau</p>
+    </div>
+    
+    <div id="error-msg" class="error hidden"></div>
+    <div id="success-msg" class="success hidden">
+        Le lien de la vidéo a été envoyé avec succès à votre adresse courriel. Vérifiez votre boîte de réception (et les indésirables) pour accéder au lien de la vidéo.
+    </div>
+</div>
+
+<script type="text/javascript">
+    // 1. INITIALISATION D'EMAILJS
+    // Remplace par ta propre clé publique récupérée sur EmailJS
+    emailjs.init("E1NTtc98ZQvRizBqg");
+
+    function verifierEtEnvoyer() {
+        const nameInput = document.getElementById("user-name").value.trim();
+        const emailInput = document.getElementById("user-email").value.trim().toLowerCase();
+        const errorDiv = document.getElementById("error-msg");
+        
+        // Cacher les messages précédents
+        errorDiv.classList.add("hidden");
+
+        // Validation de base des champs
+        if (!nameInput || !emailInput) {
+            afficherErreur("Veuillez remplir tous les champs.");
+            return;
+        }
+
+        // 2. FILTRAGE PAR DOMAINE (QUÉBEC)
+        const estDuQuebec = emailInput.endsWith(".qc.ca") || 
+                            emailInput.endsWith("@uqam.ca") || 
+                            emailInput.endsWith("@umontreal.ca") || 
+                            emailInput.endsWith("@ulaval.ca") || 
+                            emailInput.endsWith("@usherbrooke.ca") ||
+                            emailInput.endsWith("@mcgill.ca") ||
+                            emailInput.endsWith("@concordia.ca") ||
+                            emailInput.endsWith(".csspi.ca") ||
+                            emailInput.endsWith("@csdmedu.ca") ||
+                            emailInput.endsWith("@etsmtl.ca");
+
+        if (!estDuQuebec) {
+            afficherErreur("Accès refusé. Vous devez utiliser une adresse courriel d'un établissement scolaire du Québec.");
+            return;
+        }
+
+        // 3. ENVOI DU COURRIEL VIA EMAILJS
+        // Préparation des variables à envoyer dans le modèle de courriel
+        const templateParams = {
+            to_name: nameInput,
+            to_email: emailInput // Cette variable doit correspondre à l'adresse de destination dans EmailJS
+        };
+
+        // Remplacer par ton Service ID et ton Template ID
+        emailjs.send('service_9h6yl2a', 'template_tq82yrd', templateParams)
+            .then(function(response) {
+                console.log('SUCCESS!', response.status, response.text);
+                // Masquer le formulaire et afficher le message de réussite
+                document.getElementById("form-container").classList.add("hidden");
+                document.getElementById("instruction-text").classList.add("hidden");
+                document.getElementById("success-msg").classList.remove("hidden");
+            }, function(error) {
+                console.error('FAILED...', error);
+                afficherErreur("Une erreur technique est survenue lors de l'envoi du courriel. Réessayez plus tard.");
+            });
+    }
+
+    function afficherErreur(message) {
+        const errorDiv = document.getElementById("error-msg");
+        errorDiv.innerText = message;
+        errorDiv.classList.remove("hidden");
+    }
+</script>
+
+</body>
+</html>
